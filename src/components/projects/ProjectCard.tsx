@@ -11,8 +11,13 @@ import { es } from 'date-fns/locale';
 import { Project } from '@/types/project';
 import { motion } from 'framer-motion';
 
-export function ProjectCard({ project }: { project: Project }) {
-  const [isLiked, setIsLiked] = useState(false);
+interface ProjectCardProps {
+  project: Project;
+  initialLikedByCurrentUser?: boolean;
+}
+
+export function ProjectCard({ project, initialLikedByCurrentUser = false }: ProjectCardProps) {
+  const [isLiked, setIsLiked] = useState(initialLikedByCurrentUser);
   
   const toggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -20,6 +25,21 @@ export function ProjectCard({ project }: { project: Project }) {
     // y luego actualizarías el estado local o revalidarías los datos.
     setIsLiked(!isLiked);
   };
+  
+  // Get the image URL, preferring 'image' over 'image_url'
+  const imageUrl = project.image || project.image_url || '';
+  
+  // Get the likes count, preferring 'likes' over 'likes_count'
+  const likesCount = project.likes || project.likes_count || 0;
+  
+  // Get the author name, trying different fields
+  const authorName = project.author.name || project.author.full_name || project.author.username || 'Usuario Desconocido';
+  
+  // Get the author avatar, preferring 'avatar' over 'avatar_url'
+  const authorAvatar = project.author.avatar || project.author.avatar_url || '';
+  
+  // Get the created date, preferring 'createdAt' over 'created_at'
+  const createdDate = project.createdAt || project.created_at || new Date().toISOString();
   
   return (
     <motion.div
@@ -33,7 +53,7 @@ export function ProjectCard({ project }: { project: Project }) {
         <Card className="overflow-hidden h-full flex flex-col transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm hover:bg-card/80">
           <div className="relative h-48 w-full overflow-hidden">
             <img
-              src={project.image}
+              src={imageUrl}
               alt={project.title}
               className="object-cover transition-transform duration-500 group-hover:scale-110 w-full h-full"
             />
@@ -58,24 +78,20 @@ export function ProjectCard({ project }: { project: Project }) {
             <div className="absolute bottom-3 left-3 right-3">
               <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md rounded-lg p-2 border border-white/10">
                 <Avatar className="h-8 w-8 border-2 border-white/30 ring-2 ring-primary/20">
-                  {project.author.avatar && <AvatarImage 
-                    src={`http://localhost:3001${project.author.avatar}`} 
-                    alt={project.author.name} 
+                  {authorAvatar && <AvatarImage 
+                    src={authorAvatar.startsWith('http') ? authorAvatar : `http://localhost:3001${authorAvatar}`} 
+                    alt={authorName} 
                   />}
                   <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold text-sm">
-                    {project.author.name.charAt(0)}
+                    {authorName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium text-white block truncate">
-                    {project.author.name && project.author.name !== 'Usuario Desconocido' 
-                      ? project.author.name 
-                      : project.author.username && project.author.username !== 'Usuario Desconocido'
-                      ? project.author.username
-                      : 'Usuario Desconocido'}
+                    {authorName}
                   </span>
                   <span className="text-xs text-white/70">
-                    {formatDistanceToNow(new Date(project.createdAt), { 
+                    {formatDistanceToNow(new Date(createdDate), { 
                       addSuffix: true,
                       locale: es
                     })}
@@ -119,7 +135,7 @@ export function ProjectCard({ project }: { project: Project }) {
                     isLiked ? "fill-red-500 text-red-500 animate-pulse" : "text-muted-foreground group-hover:text-primary"
                   )} 
                 />
-                <span className="text-sm font-medium">{project.likes + (isLiked ? 1 : 0)}</span>
+                <span className="text-sm font-medium">{likesCount + (isLiked ? 1 : 0)}</span>
               </Button>
               
               <div className="flex items-center gap-1 text-muted-foreground group-hover:text-primary transition-colors">

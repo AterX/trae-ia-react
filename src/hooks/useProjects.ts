@@ -1,19 +1,10 @@
 // src/hooks/useProjects.ts
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-}
+import { DBProject } from '../types/project';
 
 export function useProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<DBProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -37,7 +28,7 @@ export function useProjects() {
     fetchProjects();
   }, []);
 
-  const createProject = async (projectData: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => {
+  const createProject = async (projectData: Omit<DBProject, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error } = await supabase
         .from('projects')
@@ -53,7 +44,7 @@ export function useProjects() {
     }
   };
 
-  const updateProject = async (id: string, updates: Partial<Project>) => {
+  const updateProject = async (id: string, updates: Partial<DBProject>) => {
     try {
       const { data, error } = await supabase
         .from('projects')

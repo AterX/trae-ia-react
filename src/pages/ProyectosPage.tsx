@@ -14,8 +14,10 @@ import Image from 'next/image';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
+import { Project } from '@/types/project';
 
-interface Project {
+// API response interface
+interface APIProject {
   id: string;
   title: string;
   description: string;
@@ -48,8 +50,6 @@ const difficultyLabels: Record<string, string> = {
   advanced: "Avanzado"
 };
 
-
-
 interface PaginationInfo {
   currentPage: number;
   totalPages: number;
@@ -58,6 +58,38 @@ interface PaginationInfo {
   hasPrevPage: boolean;
   limit: number;
 }
+
+// Function to transform API data to Project interface
+const transformAPIProject = (apiProject: APIProject): Project => ({
+  id: apiProject.id,
+  title: apiProject.title,
+  description: apiProject.description,
+  image: apiProject.image_url,
+  image_url: apiProject.image_url,
+  technologies: apiProject.technologies,
+  author: {
+    id: apiProject.author.id,
+    name: apiProject.author.full_name || apiProject.author.username || 'Usuario Desconocido',
+    username: apiProject.author.username,
+    full_name: apiProject.author.full_name,
+    avatar: apiProject.author.avatar_url,
+    avatar_url: apiProject.author.avatar_url,
+  },
+  likes: apiProject.likes_count,
+  likes_count: apiProject.likes_count,
+  comments_count: apiProject.comments_count,
+  views_count: apiProject.views_count,
+  createdAt: apiProject.created_at,
+  created_at: apiProject.created_at,
+  is_liked_by_current_user: apiProject.is_liked,
+  is_liked: apiProject.is_liked,
+  demoUrl: apiProject.demo_url,
+  demo_url: apiProject.demo_url,
+  githubUrl: apiProject.github_url,
+  github_url: apiProject.github_url,
+  category: apiProject.category,
+  difficulty_level: apiProject.difficulty_level,
+});
 
 export default function ProyectosPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -109,7 +141,9 @@ export default function ProyectosPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/projects?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setProjects(data.projects || []);
+        // Transform API data to Project interface
+        const transformedProjects = (data.projects || []).map(transformAPIProject);
+        setProjects(transformedProjects);
         setPagination(data.pagination || null);
       } else {
         toast.error('Error al cargar los proyectos');
@@ -130,7 +164,7 @@ export default function ProyectosPage() {
 
     try {
       const project = projects.find(p => p.id === projectId);
-      const isLiked = project?.is_liked;
+      const isLiked = project?.is_liked || project?.is_liked_by_current_user;
       
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/projects/${projectId}/like`,
@@ -149,7 +183,9 @@ export default function ProyectosPage() {
             ? { 
                 ...p, 
                 is_liked: !isLiked,
-                likes_count: isLiked ? p.likes_count - 1 : p.likes_count + 1
+                is_liked_by_current_user: !isLiked,
+                likes: isLiked ? (p.likes || 0) - 1 : (p.likes || 0) + 1,
+                likes_count: isLiked ? (p.likes_count || 0) - 1 : (p.likes_count || 0) + 1
               }
             : p
         ));
@@ -200,8 +236,6 @@ export default function ProyectosPage() {
     
     return pages;
   };
-  
-
   
   if (loading) {
     return (
@@ -312,30 +346,13 @@ export default function ProyectosPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => {
-              // Adaptar los datos del proyecto de la API a las props de ProjectCard
-              const cardProjectData = {
-                id: project.id,
-                title: project.title,
-                description: project.description,
-                image: project.image_url || '',
-                technologies: project.technologies,
-                author: {
-                  id: project.author.id,
-                  name: project.author.full_name || project.author.username || 'Usuario Desconocido',
-                  avatar: project.author.avatar_url || ''
-                },
-                likes: project.likes_count,
-                comments_count: project.comments_count,
-                views_count: project.views_count,
-                createdAt: project.created_at
-              };
-              return <ProjectCard
-                       key={project.id}
-                       project={cardProjectData}
-                       initialLikedByCurrentUser={project.is_liked}
-                     />;
-            })}
+            {projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                initialLikedByCurrentUser={project.is_liked_by_current_user || project.is_liked}
+              />
+            ))}
           </div>
 
           {/* Paginación */}
