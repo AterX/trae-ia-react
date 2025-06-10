@@ -8,7 +8,7 @@ import { Heart, MessageSquare, Share2, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Project } from '@/types/project';
+import type { Project } from '@/types/project';
 import { motion } from 'framer-motion';
 
 interface ProjectCardProps {

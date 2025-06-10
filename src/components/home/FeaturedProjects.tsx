@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ProjectCard } from '@/components/projects/ProjectCard';
-import { Project } from '@/types/project';
+import type { Project } from '@/types/project';
 
 // Mock data for featured projects
 const mockProjects: Project[] = [

@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
-import { Project } from '@/types/project';
+import type { Project } from '@/types/project';
 
 // API response interface
 interface APIProject {
